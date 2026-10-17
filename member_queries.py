@@ -110,7 +110,8 @@ def update_member(member_id, changes):
             "SELECT id FROM members WHERE id = %s FOR UPDATE",
             (member_id,),
         )
-        if cursor.fetchone() is None:
+        current_member = cursor.fetchone()
+        if current_member is None:
             return None
 
         allowed_fields = ("name", "email", "phone", "address")
@@ -120,6 +121,17 @@ def update_member(member_id, changes):
             if field in changes:
                 assignments.append(f"{field} = %s")
                 values.append(changes[field])
+
+        if not assignments:
+            cursor.execute(
+                """
+                SELECT id, name, email, phone, address
+                FROM members
+                WHERE id = %s
+                """,
+                (member_id,),
+            )
+            return cursor.fetchone()
 
         values.append(member_id)
         cursor.execute(

@@ -151,6 +151,18 @@ def update_book(book_id, changes):
                 assignments.append(f"{field} = %s")
                 values.append(changes[field])
 
+        if not assignments:
+            cursor.execute(
+                """
+                SELECT id, title, author, isbn, category, quantity,
+                       available_quantity
+                FROM books
+                WHERE id = %s
+                """,
+                (book_id,),
+            )
+            return cursor.fetchone()
+
         values.append(book_id)
         cursor.execute(
             f"UPDATE books SET {', '.join(assignments)} WHERE id = %s",
